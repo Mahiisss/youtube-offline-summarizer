@@ -1,0 +1,18 @@
+yt-dlp>=2025.11.12
+faster-whisper>=1.2.1
+transformers>=4.57.0
+huggingface_hub>=0.14.0
+torch>=2.0.0
+sentencepiece
+fsspec
+numpy
+scipy
+soundfile
+soxr
+numba
+scikit-learn
+pooch
+tqdm
+ctranslate2      # optional dependency for faster-whisper / quantized inference
+# Optional for diarization / advanced features:
+# pyannote.audio

@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+
+# HuggingFace models / cache
+models/
+hf_cache/
+transformers_cache/
+.cache/
+
+# Large ML model files
+*.safetensors
+*.bin
+*.pth
+
+# OS files
+.DS_Store
+Thumbs.db
