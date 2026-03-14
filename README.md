@@ -1,32 +1,42 @@
-Offline YouTube Video Summarizer
+🎬 Offline YouTube Video Summarizer
 
 Whisper Small (Offline STT) + BART Large CNN (Offline Summarization)
 
-1. Overview
+A fully offline NLP pipeline that downloads audio from a YouTube video, transcribes it using Whisper Small, cleans the transcript, and generates an abstractive summary using BART Large CNN.
 
-This project implements a fully offline system that downloads audio from a YouTube URL, transcribes it using Whisper Small (CTranslate2), cleans the transcript, and generates an abstractive summary using a local BART Large CNN model.
-All processing is performed locally without any cloud APIs, making the system suitable for restricted or offline environments.
+The entire system runs locally without any cloud APIs, making it suitable for offline or restricted environments.
 
-Pipeline:
-YouTube URL → Audio Download → Whisper Transcription → Transcript Cleaning → BART Summarization → Final Summary
+🚀 Pipeline
+YouTube URL
+   ↓
+Audio Download
+   ↓
+Whisper Transcription
+   ↓
+Transcript Cleaning
+   ↓
+BART Summarization
+   ↓
+Final Summary
+✨ Features
 
-2. Features
+🎤 Offline speech-to-text using Whisper Small (CTranslate2)
 
-Offline Whisper Small speech-to-text
+🧠 Abstractive summarization using BART Large CNN
 
-Offline summarization using BART Large CNN snapshot
+🧹 Transcript cleaning and normalization
 
-Modular architecture for easier debugging and extension
+🧩 Chunk-based summarization for long transcripts
 
-Transcript cleaning and normalization
+🎵 Lyric / music detection to avoid meaningless summaries
 
-Chunk-based summarization to handle long transcripts
+🧱 Modular pipeline architecture
 
-lyric/music detection
+💻 CLI commands for running each stage
 
-CLI commands and PowerShell automation script
+⚙️ PowerShell automation script
 
-3. Repository Structure
+📂 Repository Structure
 youtube-offline-summarizer/
 │
 ├── run_full_pipeline.ps1
@@ -34,13 +44,13 @@ youtube-offline-summarizer/
 ├── src/
 │   ├── download_audio.py
 │   ├── stt_whisper.py
-│   ├── summarize_text_improved.py
+│   └── summarize_text_improved.py
 │
 ├── scripts/
 │   └── normalize_text.py
 │
 ├── models/
-│   └── bart/     
+│   └── bart/
 │
 ├── demo/
 │   ├── *.wav
@@ -49,110 +59,116 @@ youtube-offline-summarizer/
 │   └── *.summary.txt
 │
 └── requirements.txt
-
-4. Environment Setup
-Create and activate virtual environment
+⚙️ Environment Setup
+1️⃣ Create Virtual Environment
 python -m venv venv
 .\venv\Scripts\activate
 pip install -r requirements.txt
+2️⃣ Install FFmpeg
 
-Install FFmpeg
-
-Download FFmpeg, extract it, and note the bin folder path:
+Download FFmpeg and add the bin directory:
 
 C:\tools\ffmpeg\ffmpeg-8.0.1-essentials_build\bin
+3️⃣ Download Offline BART Model
 
-Download offline BART model
-
-Place the BART snapshot here:
+Place the model snapshot in:
 
 models/bart/models--facebook--bart-large-cnn/snapshots/<snapshot-id>/
+▶ Running the Pipeline
 
-5. Model Choices and Rationale
+Example demo video:
+
+https://youtu.be/rNxC16mlO60
+
+Step 1 — Download Audio
+python src/download_audio.py \
+--url "https://youtu.be/rNxC16mlO60" \
+--out demo \
+--ffmpeg-location "C:\tools\ffmpeg\ffmpeg-8.0.1-essentials_build\bin"
+Step 2 — Transcribe with Whisper
+python src/stt_whisper.py \
+--wav ".\demo\rNxC16mlO60.wav" \
+--out ".\demo\rNxC16mlO60.whisper.txt" \
+--model small \
+--device cpu
+Step 3 — Clean Transcript
+python scripts/normalize_text.py \
+".\demo\rNxC16mlO60.whisper.txt" \
+".\demo\rNxC16mlO60.whisper.clean.txt"
+Step 4 — Generate Summary
+python src/summarize_text_improved.py \
+--transcript ".\demo\rNxC16mlO60.whisper.clean.txt" \
+--model_name_or_path "<BART_MODEL_PATH>" \
+--out ".\demo\rNxC16mlO60.summary.txt" \
+--num_beams 6 \
+--max_length 150 \
+--min_length 50 \
+--length_penalty 0.9 \
+--device cpu \
+--force
+🧠 Model Choices
 Whisper Small (CTranslate2)
 
-Chosen for its balance of speed, accuracy, and CPU efficiency.
-Larger Whisper models provide minor accuracy gains but are too slow for offline CPU-only execution. Whisper Small with CTranslate2 delivers fast, reproducible transcription.
+Chosen for its balance between speed and transcription accuracy on CPU-only systems.
+Using CTranslate2 significantly improves inference performance.
 
 BART Large CNN
 
-Selected for its strong performance on abstractive summarization.
-It handles lecture-style content well, produces coherent summaries, and runs reliably from a local snapshot.
+Used for abstractive summarization due to strong performance on long-form content like lectures and talks.
 
 Chunked Summarization
 
-Since BART accepts only ~1024 tokens per pass, long transcripts must be split into smaller sections.
-Each chunk is summarized independently and merged for a final summary.
+BART supports ~1024 tokens per pass.
+Long transcripts are split into chunks, summarized individually, then merged.
 
 Transcript Cleaning
 
-A dedicated normalization script removes filler words, duplicated fragments, spacing issues, and ASR noise.
-Cleaner input meaningfully improves summarization quality.
+Normalization removes:
 
-Lyric/Music Detection
+filler words
 
-Avoids generating meaningless summaries for songs, which often contain repetition and little semantic content.
-A --force flag bypasses detection when required.
+repeated fragments
 
-Modular Design
+spacing issues
 
-Downloading, transcription, cleaning, and summarization are separated into individual modules.
-This structure mirrors production ML systems and keeps debugging simple.
+ASR noise
 
-6. Running the Pipeline
+Cleaner input improves summarization quality.
 
-Using demo video:
-https://youtu.be/rNxC16mlO60
+Lyric / Music Detection
 
-Step 1: Download audio
-python src/download_audio.py --url "https://youtu.be/rNxC16mlO60" --out demo --ffmpeg-location "C:\tools\ffmpeg\ffmpeg-8.0.1-essentials_build\bin"
+Prevents poor summaries for songs or repetitive content.
 
-Step 2: Transcribe
-python src/stt_whisper.py --wav ".\demo\rNxC16mlO60.wav" --out ".\demo\rNxC16mlO60.whisper.txt" --model small --device cpu
+📊 Example Output
 
-Step 3: Clean transcript
-python scripts/normalize_text.py ".\demo\rNxC16mlO60.whisper.txt" ".\demo\rNxC16mlO60.whisper.clean.txt"
+Summary generated for the demo video:
 
-Step 4: Summarize
-python src/summarize_text_improved.py ^
-  --transcript ".\demo\rNxC16mlO60.whisper.clean.txt" ^
-  --model_name_or_path "<ABSOLUTE_PATH_TO_BART_SNAPSHOT>" ^
-  --out ".\demo\rNxC16mlO60.improved.summary.txt" ^
-  --num_beams 6 --max_length 150 --min_length 50 --length_penalty 0.9 --device cpu --force
+George Hood set the world record for the longest plank in history. He kept going for an hour, for two hours, and then 10 hours. Hood said he kept his mind busy by focusing on conversations in the room.
 
-7. Final Summary
+Grit is not just willpower. It is strongly connected to biology, especially a protein called BDNF, which plays a role in memory and mental resilience.
 
-This is the final summary produced for the demo video, included exactly as generated:
+Activities combining physical effort and concentration, such as yoga, have been shown to significantly increase BDNF levels.
 
-George Hood set the world record for the longest plank in history. He kept going for an hour, for two hours, and then 10 hours. Hood said he kept his mind busy, distracting himself by focusing on the conversations in the room.
+Even short exercises like a one-minute plank can help build mental resilience.
 
-Grit isn't just about willpower. It's rooted in biology. The most powerful indicator to date is a protein that we're just starting to understand called brain derived neurotrophic factor, or BDNF. BDNF is crucial for things like memory and mental resilience.
-
-No one has ever studied BDNF during a plank. What we know is this. The most effective exercises for raising BDNF levels are those requiring mental effort. In people, activities such as yoga, of all things, that combine physical effort and concentration have produced some of the highest levels of BDNF ever measured.
-
-The next time you feel you need more grit in your life, do a plank. If you can't get on the floor, do it against the wall. It only takes a minute, but that minute can be transformative. George, Daniel, and my patients deserve as much.
-
-8. Challenges and Solutions
+⚠ Challenges & Solutions
 Challenge	Reason	Solution
-Repetition in Whisper output	ASR artifact in long speech	Added transcript normalization
-BART token limit	Only ~1024 tokens supported	Introduced chunk-based summarization
-Poor summaries for songs	Repetition and low meaning	Implemented lyric/music detection
-Offline summarization required	HuggingFace usually downloads at runtime	Included full local model snapshot
-Multi-step execution	Hard to reproduce	Added PowerShell wrapper script
-9. Checklist
+Whisper repetition	ASR artifacts	Transcript normalization
+BART token limit	~1024 tokens	Chunk-based summarization
+Poor summaries for songs	Repetitive lyrics	Lyric detection
+Offline requirement	HF models download online	Local model snapshot
+Multi-step pipeline	Hard to reproduce	PowerShell automation script
+✅ Workflow Checklist
 
-Activate environment
+1️⃣ Activate virtual environment
+2️⃣ Download YouTube audio
+3️⃣ Transcribe using Whisper
+4️⃣ Clean transcript
+5️⃣ Run summarization
+6️⃣ View final summary file
 
-Download audio
+🧩 Final Notes
 
-Transcribe with Whisper
+This project demonstrates a fully offline AI pipeline combining speech recognition and transformer-based summarization.
 
-Normalize the transcript
-
-Run summarizer
-
-Open final summary file
-
-10. Final Notes
-
-This system is designed to function entirely offline with a clean, production-style architecture. Whisper Small provides efficient CPU-based transcription, while BART Large CNN produces high-quality abstractive summaries. The pipeline includes input cleaning, chunked summarization, and optional lyric detection to ensure robust performance across diverse YouTube videos.
+The architecture separates downloading, transcription, cleaning, and summarization into independent modules, following patterns commonly used in production ML systems.
