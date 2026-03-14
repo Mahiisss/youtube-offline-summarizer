@@ -36,7 +36,7 @@ Final Summary
 
 ⚙️ PowerShell automation script
 
-📂 Repository Structure
+📂 Repository Structureyoutube-offline-summarizer/
 youtube-offline-summarizer/
 │
 ├── run_full_pipeline.ps1
